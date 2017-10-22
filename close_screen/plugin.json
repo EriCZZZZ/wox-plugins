@@ -1,0 +1,12 @@
+{
+  "ID":"f554c17e-0472-4369-b77c-00d69ac60cf6",
+  "ActionKeyword":"cls",
+  "Name":"Close Screen",
+  "Description":"close screen",
+  "Author":"Eric.rh",
+  "Version":"0.0.1",
+  "Language":"python",
+  "Website":"http://www.eric.cn",
+  "IcoPath": "Images\\screen.png",
+  "ExecuteFileName":"closeScreen.py"
+}
