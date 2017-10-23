@@ -27,11 +27,11 @@ namespace wifi
 					case "free" :
 						ssids = GetFreeList();
 						break;
-					case "disconnect" :
+					case "reconnect" :
 						ssids = GetIsConnectingSsids();
 						break;
 					case "connect":
-						ssids = GetIsConnectingSsids(false);
+						ssids = GetIsConnectingSsids(false, query.SecondSearch);
 						break;
 					default:
 						ssids = ScanSsid();
@@ -39,21 +39,57 @@ namespace wifi
 			}
 			
 			ssids.Sort((a, b) => a.WlanSignalQuality > b.WlanSignalQuality ? -1 : 1);
-			
-			ssids.ForEach(wifi =>
+
+			switch (arg1)
 			{
-				results.Add(new Result
-				{
-					Title = wifi.Ssid + (wifi.IsCurrentConnect ? "[CONNECTING]" : ""),
-					SubTitle = wifi.WlanSignalQuality + " (" + wifi.Dot11DefaultAuthAlgorithm + ")",
-					IcoPath = "images\\" + (wifi.IsLock ? "l" : "n") + (wifi.WlanSignalQuality / 25 + 1).ToString() + ".png",
-					Action = aCtx =>
-					{
-						_ctx.API.ChangeQuery("wifi " + (wifi.IsCurrentConnect ? "disconnect " : "connect ") + wifi.Ssid, true);
-						return false;
-					}
-				});
-			});
+					case "reconnect":
+						ssids.ForEach(wifi =>
+						{
+							results.Add(new Result()
+							{
+								Title = "[RE-CONNECT]" + wifi.Ssid,
+								IcoPath = "images\\reconnect.png",
+								Action = aCtx =>
+								{
+									_ctx.API.ShowMsg("reconnect " + wifi.Ssid);
+									return true;
+								}
+							});
+						});
+						break;
+					case "connect":
+						ssids.ForEach(wifi =>
+						{
+							results.Add(new Result()
+							{
+								Title = "[CONNECT]" + wifi.Ssid,
+								SubTitle = wifi.WlanSignalQuality + " (" + wifi.Dot11DefaultAuthAlgorithm + ")",
+								IcoPath = "images\\" + (wifi.IsLock ? "l" : "n") + (wifi.WlanSignalQuality / 25 + 1).ToString() + ".png",
+								Action = aCtx =>
+								{
+									_ctx.API.ShowMsg("connect" + wifi.Ssid);
+									return true;
+								}
+							});
+						});
+						break;
+					default:
+						ssids.ForEach(wifi =>
+						{
+							results.Add(new Result
+							{
+								Title = wifi.Ssid + (wifi.IsCurrentConnect ? "[CONNECTING]" : ""),
+								SubTitle = wifi.WlanSignalQuality + " (" + wifi.Dot11DefaultAuthAlgorithm + ")",
+								IcoPath = "images\\" + (wifi.IsLock ? "l" : "n") + (wifi.WlanSignalQuality / 25 + 1).ToString() + ".png",
+								Action = aCtx =>
+								{
+									_ctx.API.ChangeQuery("wifi " + (wifi.IsCurrentConnect ? "reconnect " : "connect ") + wifi.Ssid, true);
+									return false;
+								}
+							});
+						});
+						break;
+			}
 
 			return results;
 		}
@@ -63,13 +99,13 @@ namespace wifi
 		}
 		#endregion
 
-		private static List<Wifissid> GetIsConnectingSsids(bool isConnecting = true)
+		private static List<Wifissid> GetIsConnectingSsids(bool isConnecting = true, string ssid = "")
 		{
 			var all = ScanSsid();
 			var results = new List<Wifissid>();
 			all.ForEach(wifi =>
 			{
-				if (wifi.IsCurrentConnect == isConnecting)
+				if (wifi.IsCurrentConnect == isConnecting && (ssid == "" || (ssid != "" && wifi.Ssid == ssid)))
 				{
 					results.Add(wifi);
 				}
